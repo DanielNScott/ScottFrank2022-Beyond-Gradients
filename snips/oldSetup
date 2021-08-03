@@ -1,0 +1,51 @@
+
+%% Get random covariation matrix
+%[sigma_in , sigma_sqrt_in ] = getRandomSPD(2,1,1);
+%[sigma_out, sigma_sqrt_out] = getRandomSPD(2,1,1);
+
+% Moderately correlated inputs, moderately anti-corr output for
+% destructive interference
+sigma_sqrt_in  = [1.0000,  0.3324;  0.3324, 1.0000];
+sigma_sqrt_out = [1.0000, -0.3324; -0.3324, 1.0000];
+
+
+%% Generate random task
+[~, ins, trgs] = getRandomTask(n_inputs, io_dims, sigma_sqrt_in, sigma_sqrt_out);
+
+%% Generate random initial weights
+% Generate random initial weights
+if make_weights
+   % 
+   U = getRandomFrame(dim_out);
+   U = U(1:dim_out, :);
+   
+   V = getRandomFrame(dim_in);
+   V = V(1:dim_in, 1:dim_out);
+   
+   S = diag(exp(-linspace(0,3, dim_out)));
+
+   % Construct W via its SVD 
+   W0 = U*S*V';
+end
+
+
+%% Sample a set of noise dimensions for each item.
+noise_dims = [];
+c_mat = [];
+for i = 1:n_inputs
+   tmp = randperm(dim_out);
+   noise_dims(i,:) = tmp(1:noise_rank);
+   
+   tmp = zeros(dim_out,1);
+   tmp(noise_dims(i,:)) = 1;
+   c_mat(i,:,:) = tmp*ones(1,dim_in);
+end
+
+%% For the time being, inflate correlation
+
+% Calculate input and target correlations
+rho_in   = ins' *ins;
+rho_trgs = trgs'*trgs;
+
+% Caculate censoring matrix correlations
+rho_c  = corr( vec(c_mat(1,:,:)), vec(c_mat(2,:,:)) );
