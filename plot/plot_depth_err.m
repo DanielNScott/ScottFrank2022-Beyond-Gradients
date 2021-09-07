@@ -1,12 +1,12 @@
 function [] = plot_depth_err(ps, tsk, hist)
 
    % Depth aggregation
-   for depth = 1:(ps.depth+1)
+   for depth = 1:(tsk.depth+1)
       dinds{depth} = find(tsk.tuples(:,1) == depth); 
    end
    
    subplot(1,2,1)
-   for i = 1:(ps.depth+1)
+   for i = 1:(tsk.depth+1)
       plot(mean(hist.g.err(dinds{i},:))); hold on
    end
    ylims = ylim();
@@ -18,7 +18,7 @@ function [] = plot_depth_err(ps, tsk, hist)
    legend({'Task 1', 'Task 2', '...'})
 
    subplot(1,2,2)
-   for i = 1:(ps.depth+1)
+   for i = 1:(tsk.depth+1)
       plot(mean(hist.d.err(dinds{i},:))); hold on
    end
    grid on

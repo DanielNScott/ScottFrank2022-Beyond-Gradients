@@ -25,6 +25,6 @@ function [] = plot_task_err(tsk, hist)
    ylabel('Squared Error')
    legend({'Task 1', 'Task 2', '...'})
    
-   set(gcf,'Position', [100         233        1533         728])
+   set(gcf,'Position', [100         476        1009         417])
 
 end

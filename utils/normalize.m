@@ -1,3 +1,8 @@
 function x = normalize(x)
-   x = x./norm(x);
+
+   if norm(x) > 0
+      x = x./norm(x);
+   else
+      x = x;
+   end
 end

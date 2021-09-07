@@ -2,13 +2,14 @@ function [] = plot_all(ps, tsk, hist)
 
 
    plot_task_err(tsk, hist)
-   
-   plot_depth_err(ps, tsk, hist)
+
+   if strcmp(ps.task, 'ff')
+      plot_depth_err(ps, tsk, hist)
+   end
 
    plot_cum_err(ps, tsk, hist)
 
    plot_wgt_hist(tsk, hist)
-   
    
    % Plots
    %[u0, s0, v0] = svd(W0);

@@ -25,4 +25,6 @@ function [] = plot_wgt_hist(tsk, hist)
    xlabel('Trial Number')
    ylabel('Weight Value')
    
+   
+   set(gcf, 'Position', [100         476        1009         417])
 end
