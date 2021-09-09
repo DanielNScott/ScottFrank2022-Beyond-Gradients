@@ -4,7 +4,8 @@ close all;
 
 % Which quantities do we want to accumulate?
 accum_wgts = 0;
-avg_things = 0;
+avg_things = 1; % Average endpoints for 2-parameter slices
+cnt_diffs  = 1; % Are the number of trials different per parameter?
 
 % Define simulation parameters
 ps = init_params(sim);
@@ -23,8 +24,10 @@ err_means_d = zeros(lp.p1_len, lp.p2_len);
 err_stds_g = zeros(lp.p1_len, lp.p2_len);
 err_stds_d = zeros(lp.p1_len, lp.p2_len);
 
-err_accum_g = zeros(lp.n_iters, tsk.n_trials, lp.p2_len, lp.p1_len);
-err_accum_d = zeros(lp.n_iters, tsk.n_trials, lp.p2_len, lp.p1_len);
+if ~cnt_diffs
+   err_accum_g = zeros(lp.n_iters, tsk.n_trials, lp.p2_len, lp.p1_len);
+   err_accum_d = zeros(lp.n_iters, tsk.n_trials, lp.p2_len, lp.p1_len);
+end
 
 % for dim = dim_min:dim_max
 for p1_ind = 1:lp.p1_len
@@ -50,18 +53,27 @@ for p1_ind = 1:lp.p1_len
       % params.n_inputs = n_inputs;
       eval(lp.p2_do_addnl);
       
+      % If there are different tsk.n_trials for diff params in sweep
+      if cnt_diffs
+         tsk = init_task(ps);
+
+         err_accum_g = zeros(lp.n_iters, tsk.n_trials);
+         err_accum_d = zeros(lp.n_iters, tsk.n_trials);
+      end
+      
       for iter = 1:lp.n_iters
          
          % Inform the user about loop state
          clc
          disp(['(', lp.p1_desc, ', ' lp.p2_desc, ', iter): (', num2str(p1), ',', num2str(p2), ',' num2str(iter), ')'])
-         
+                  
          % Run the simulations
          [hist, tsk] = run_algs(ps);
          
          % Process the weight histories
-         [W_diag_g, W_diag_d, W_off_g, W_off_d] = get_wgt_summaries(hist.d, hist.g);
-         
+         if accum_wgts
+            [W_diag_g, W_diag_d, W_off_g, W_off_d] = get_wgt_summaries(hist.d, hist.g);
+         end
          
          if strcmp(ps.task,'ff') && lp.aggregate_depth
             % Depth aggregation of errors
@@ -74,8 +86,13 @@ for p1_ind = 1:lp.p1_len
          end
 
          % Update loop accumulators
-         err_accum_d(iter, :, p2_ind, p1_ind) = cumsum(sum(hist.d.err,1)); 
-         err_accum_g(iter, :, p2_ind, p1_ind) = cumsum(sum(hist.g.err,1));
+         if cnt_diffs
+            err_accum_d(iter, :) = cumsum(sum(hist.d.err,1)); 
+            err_accum_g(iter, :) = cumsum(sum(hist.g.err,1));
+         else
+            err_accum_d(iter, :, p2_ind, p1_ind) = cumsum(sum(hist.d.err,1)); 
+            err_accum_g(iter, :, p2_ind, p1_ind) = cumsum(sum(hist.g.err,1));
+         end
 
          if accum_wgts
             accum_w_diag_g(iter, :, p2_ind, p1_ind) = W_diag_g;

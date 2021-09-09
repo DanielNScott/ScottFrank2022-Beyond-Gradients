@@ -31,7 +31,7 @@ switch(loop_code)
       lp.p1_min = dim_min;
       lp.p1_max = dim_max;
       lp.p1_inc = 1;
-      lp.p1_name = {'dim_in', 'dim_hid'};
+      lp.p1_name = {'dim_in', 'dim_hid', 'dim_out'};
       lp.p1_desc = 'dim';
       
       lp.p2_min  = 2;
@@ -42,7 +42,7 @@ switch(loop_code)
       
       lp.p1_do_addnl = 'lp.p2_len = length(lp.p1_min:lp.p1_inc:p1);';
       lp.p2_do_addnl = '';
-      lp.n_iters = 100;
+      lp.n_iters = 500;
 
 
    case(2)
@@ -73,8 +73,8 @@ switch(loop_code)
 
    case(3)
       % Correlation value only
-      lp.p1_min = 250;
-      lp.p1_max = 250;
+      lp.p1_min = 25;
+      lp.p1_max = 25;
       lp.p1_inc = 1;
       lp.p1_name = {'n_per_epoch'};
       lp.p1_desc = 'n_per_epoch';
@@ -89,7 +89,7 @@ switch(loop_code)
        
       lp.p2_do_addnl = '';
       
-      lp.n_iters = 100;
+      lp.n_iters = 1000;
 
 
    case(4)
