@@ -48,9 +48,9 @@ switch(loop_code)
    case(2)
       % Learning rate and epoch trial count
       
-      min_count = 50;
-      max_count = 500;
-      inc_count = 50;
+      min_count = 25;
+      max_count = 250;
+      inc_count = 25;
       
       lp.p1_min = min_count;
       lp.p1_max = max_count;
@@ -60,15 +60,15 @@ switch(loop_code)
       
       lp.p1_do_addnl = '';
       
-      lp.p2_min  = 0.0002;
-      lp.p2_max  = 0.002;
-      lp.p2_inc  = 0.0002;
+      lp.p2_min  = 0.005;
+      lp.p2_max  = 0.015;
+      lp.p2_inc  = 0.001;
       lp.p2_name = {'lr'};
       lp.p2_desc = 'lr';
       
-      lp.p2_do_addnl = 'params.n_epochs = ceil(250*4/p1 *0.001/p2)';
+      lp.p2_do_addnl = 'ps.n_epochs = 10*ceil(0.01/p2);';
       
-      lp.n_iters = 100;
+      lp.n_iters = 10;
 
 
    case(3)
