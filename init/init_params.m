@@ -14,7 +14,7 @@ if sim == 1
    params.p_grade  = 0.8;
 
    params.n_per_epoch = 25;
-   params.n_epochs = 10;
+   params.n_epochs = 15;
 
    params.lr  = 0.01;
 

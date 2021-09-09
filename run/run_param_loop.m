@@ -6,6 +6,7 @@ close all;
 accum_wgts = 0;
 avg_things = 1; % Average endpoints for 2-parameter slices
 cnt_diffs  = 1; % Are the number of trials different per parameter?
+check_end  = 1;
 
 % Define simulation parameters
 ps = init_params(sim);
@@ -84,14 +85,20 @@ for p1_ind = 1:lp.p1_len
                err_accum_depth_g(depth,iter,:) = cumsum(sum(hist.g.err(dinds{depth},:),1));
             end
          end
-
+         
+         err_sum_d = sum(hist.d.err,1);
+         err_sum_g = sum(hist.g.err,1);
+         
          % Update loop accumulators
          if cnt_diffs
-            err_accum_d(iter, :) = cumsum(sum(hist.d.err,1)); 
-            err_accum_g(iter, :) = cumsum(sum(hist.g.err,1));
+            err_accum_d(iter, :) = cumsum(err_sum_d); 
+            err_accum_g(iter, :) = cumsum(err_sum_g);
          else
-            err_accum_d(iter, :, p2_ind, p1_ind) = cumsum(sum(hist.d.err,1)); 
-            err_accum_g(iter, :, p2_ind, p1_ind) = cumsum(sum(hist.g.err,1));
+            err_accum_d(iter, :, p2_ind, p1_ind) = cumsum(err_sum_d); 
+            err_accum_g(iter, :, p2_ind, p1_ind) = cumsum(err_sum_g);
+            
+            %err_fin_d(iter, :, p2_ind, p1_ind) = err_sum_d(end);
+            %err_fin_g(iter, :, p2_ind, p1_ind) = err_sum_g(end);
          end
 
          if accum_wgts

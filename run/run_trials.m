@@ -168,7 +168,7 @@ function [dW, sigma] = get_dW(rule, ps, Wr, delta_r, in, hid, out, iter, sigma, 
       y_tilde_d = tsk.P_list{task_num}*y_tilde_g;
 
       y_tilde = ps.p_grade*y_tilde_d + (1-ps.p_grade)*y_tilde_g;
-      y_tilde = y_tilde* y_norm/norm(y_tilde);
+      y_tilde = normalize(y_tilde)* y_norm;
 
       dW = ps.lr*y_tilde*in';
    end

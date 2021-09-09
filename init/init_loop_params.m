@@ -26,7 +26,7 @@ switch(loop_code)
    case(1)
       % Dimension and input number sweep
       dim_min = 3;
-      dim_max = 10;
+      dim_max = 14;
       
       lp.p1_min = dim_min;
       lp.p1_max = dim_max;
@@ -40,9 +40,9 @@ switch(loop_code)
       lp.p2_name = {'n_inputs'};
       lp.p2_desc = 'n_inputs';
       
-      lp.p1_do_addnl = 'lp.p2_len = length(lp.p1_min:lp.p1_inc:p1);';
+      lp.p1_do_addnl = 'lp.p2_len = length(lp.p2_min:lp.p1_inc:p1);';
       lp.p2_do_addnl = '';
-      lp.n_iters = 500;
+      lp.n_iters = 1000;
 
 
    case(2)
@@ -66,9 +66,9 @@ switch(loop_code)
       lp.p2_name = {'lr'};
       lp.p2_desc = 'lr';
       
-      lp.p2_do_addnl = 'ps.n_epochs = 10*ceil(0.01/p2);';
+      lp.p2_do_addnl = 'ps.n_epochs = 15*ceil(0.01/p2);';
       
-      lp.n_iters = 10;
+      lp.n_iters = 1000;
 
 
    case(3)
