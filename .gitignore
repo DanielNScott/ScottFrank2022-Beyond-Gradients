@@ -1,4 +1,4 @@
-data/*.mat
-data/*.fig
-data/*.svg
-data/*.png
+*.mat
+*.fig
+*.svg
+*.png
