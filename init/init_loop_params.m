@@ -3,8 +3,28 @@ function lp = init_loop_params(loop_code)
 lp.aggregate_depth = 0;
 
 switch(loop_code)
+      case(-1)
+      % No changes in params, test (10 iters)
+      lp.p1_min = 25;
+      lp.p1_max = 25;
+      lp.p1_inc = 1;
+      lp.p1_name = {'n_per_epoch'};
+      lp.p1_desc = 'n_per_epoch';
+       
+      lp.p1_do_addnl = '';
+       
+      lp.p2_min  = 0.5;
+      lp.p2_max  = 0.5;
+      lp.p2_inc  = 0.05;
+      lp.p2_name = {'rho'};
+      lp.p2_desc = 'rho';
+       
+      lp.p2_do_addnl = '';
+      
+      lp.n_iters = 30;
+   
    case(0)
-      % No changes in params
+      % No changes in params (1000 iters)
       lp.p1_min = 25;
       lp.p1_max = 25;
       lp.p1_inc = 1;
@@ -24,7 +44,7 @@ switch(loop_code)
       lp.n_iters = 1000;
 
    case(1)
-      % Dimension and input number sweep
+      % (Number of Inputs) x (Network Dimension)
       dim_min = 3;
       dim_max = 14;
       
@@ -46,11 +66,11 @@ switch(loop_code)
 
 
    case(2)
-      % Learning rate and epoch trial count
+      % (Learning Rate) x (Epoch Trial Count)
       
-      min_count = 25;
-      max_count = 250;
-      inc_count = 25;
+      min_count = 15;
+      max_count = 115;
+      inc_count = 10;
       
       lp.p1_min = min_count;
       lp.p1_max = max_count;
@@ -60,19 +80,19 @@ switch(loop_code)
       
       lp.p1_do_addnl = '';
       
-      lp.p2_min  = 0.005;
-      lp.p2_max  = 0.015;
-      lp.p2_inc  = 0.001;
+      lp.p2_min  = 0.045;
+      lp.p2_max  = 0.05;
+      lp.p2_inc  = 0.005;
       lp.p2_name = {'lr'};
       lp.p2_desc = 'lr';
       
-      lp.p2_do_addnl = 'ps.n_epochs = 15*ceil(0.01/p2);';
+      lp.p2_do_addnl = 'ps.n_epochs = 15  *ceil(0.01/p2);';
       
-      lp.n_iters = 1000;
+      lp.n_iters = 10;
 
 
    case(3)
-      % Correlation value only
+      % (Correlation Value)
       lp.p1_min = 25;
       lp.p1_max = 25;
       lp.p1_inc = 1;
@@ -93,7 +113,7 @@ switch(loop_code)
 
 
    case(4)
-      % Starting SNR vs S
+      % (Signal) x (Noise)
       lp.p1_min = 0.0;
       lp.p1_max = 0.3;
       lp.p1_inc = 0.05;
@@ -110,7 +130,7 @@ switch(loop_code)
 
       lp.p2_do_addnl = '';
 
-      lp.n_iters = 100;
+      lp.n_iters = 300;
 
 
    case(5)
@@ -125,17 +145,17 @@ switch(loop_code)
 
       lp.p2_min  = 0.0;
       lp.p2_max  = 1.0;
-      lp.p2_inc  = 0.2;
+      lp.p2_inc  = 0.1;
       lp.p2_name = {'p_grade'};
       lp.p2_desc = 'Mixing Parameter';
 
       lp.p2_do_addnl = '';
 
-      lp.n_iters = 20;
+      lp.n_iters = 5;
 
 
    case(6)
-      % Off-diagonal weights by p_grade
+      % Weight improvement by depth
       lp.p1_min = 25;
       lp.p1_max = 25;
       lp.p1_inc = 1;
@@ -177,6 +197,26 @@ switch(loop_code)
       lp.p2_do_addnl = '';
       
       lp.n_iters = 1000;
+      
+   case(8)
+      % Link number by overlap
+      lp.p1_min = 1;
+      lp.p1_max = 10;
+      lp.p1_inc = 1;
+      lp.p1_name = {'link'};
+      lp.p1_desc = 'link';
+       
+      lp.p1_do_addnl = '';
+       
+      lp.p2_min  = 2;
+      lp.p2_max  = 9;
+      lp.p2_inc  = 7;
+      lp.p2_name = {'comp'};
+      lp.p2_desc = 'comp';
+       
+      lp.p2_do_addnl = '';
+      
+      lp.n_iters = 200;
 end
 
 %% Derived loop parameters

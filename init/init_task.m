@@ -23,12 +23,14 @@ if strcmp(ps.task, 'basic')
    tsk.depth = 0;
 
 elseif strcmp(ps.task, 'ff')
-   % Compositional task
+   % Hierarchical task
    tsk.depth = log2(ps.dim_in);
    [tsk.Wr_list, tsk.P_list] = get_readouts_compositional(tsk.depth);
 
-   tsk.n_tasks = repmat(tsk.depth + 1, [tsks.n_tasks,1]);
-   tsk.n_per_task = ps.dim_in;
+   %tsk.n_tasks = repmat(tsk.depth + 1, [tsks.n_tasks,1]);
+   
+   tsk.n_tasks = tsk.depth + 1;
+   tsk.n_per_task = repmat(ps.dim_in, [tsk.n_tasks ,1]);
 
    [tsk.ins, tsk.trgs] = get_random_task_compositional(tsk.Wr_list, ps.dim_in);
 
@@ -105,16 +107,19 @@ end
 tsk.n_inputs = size(tsk.ins,2);
 
 % Initialize weights
-% tsk.W0 = eye(ps.dim_hid)*ps.w0_diag + randn(ps.dim_hid, ps.dim_in)* ps.w0_std;
-tsk.W0 = zeros(ps.dim_hid, ps.dim_in);
-
+if ps.dim_hid == ps.dim_in
+   tsk.W0 = eye(ps.dim_hid)*ps.w0_diag + randn(ps.dim_hid, ps.dim_in)* ps.w0_std;
+else
+   tsk.W0 = zeros(ps.dim_hid, ps.dim_in) + randn(ps.dim_hid, ps.dim_in)* ps.w0_std;
+end
+   
 % Task tuples define a task number and a set of stimulus numbers
 % Weight readouts, inputs, and targets are indexed by (task, stim number) pair.
 k = 0;
 tuples = [];
 for i = 1:tsk.n_tasks
    for j = 1:tsk.n_per_task(i)
-      k = k+1; 
+      k = k+1;
       tuples(k,:) = [i,j];
    end
 end

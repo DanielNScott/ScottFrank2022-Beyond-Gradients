@@ -5,8 +5,14 @@ close all;
 % Which quantities do we want to accumulate?
 accum_wgts = 0;
 avg_things = 1; % Average endpoints for 2-parameter slices
-cnt_diffs  = 1; % Are the number of trials different per parameter?
+cnt_diffs  = 0; % Are the number of trials different per parameter?
 check_end  = 1;
+
+
+
+% 
+timer = 0;
+iters_compl = 0;
 
 % Define simulation parameters
 ps = init_params(sim);
@@ -17,6 +23,9 @@ tsk = init_task(ps);
 
 % Define loop parameters
 lp = init_loop_params(loop_code);
+
+%
+iters_total = lp.p1_len * lp.p2_len * lp.n_iters;
 
 % Initialize error data arrays
 err_means_g = zeros(lp.p1_len, lp.p2_len);
@@ -63,17 +72,22 @@ for p1_ind = 1:lp.p1_len
       end
       
       for iter = 1:lp.n_iters
+         % Keep track of iteration time
+         tic
+         iters_compl = iters_compl + 1;
          
          % Inform the user about loop state
          clc
          disp(['(', lp.p1_desc, ', ' lp.p2_desc, ', iter): (', num2str(p1), ',', num2str(p2), ',' num2str(iter), ')'])
-                  
+         disp(['Time per iter        : ', num2str(timer/iters_compl), '[s]'])
+         disp(['Projected time left  : ', num2str(timer/iters_compl * iters_total/60), '[m]'])
+         
          % Run the simulations
          [hist, tsk] = run_algs(ps);
          
          % Process the weight histories
          if accum_wgts
-            [W_diag_g, W_diag_d, W_off_g, W_off_d] = get_wgt_summaries(hist.d, hist.g);
+            [W_diag_g, W_diag_d, W_off_g, W_off_d] = get_wgt_summaries(hist.d, hist.g, tsk, ps);
          end
          
          if strcmp(ps.task,'ff') && lp.aggregate_depth
@@ -114,6 +128,7 @@ for p1_ind = 1:lp.p1_len
          %   angles(iter, :, i) = get_upper(corr(hist.g.gs(:,:,i)));
          %end
          
+         timer = timer + toc;
       end % repetition loop
       
       % Time-courses of error mean and sd over repetitions
@@ -125,12 +140,20 @@ for p1_ind = 1:lp.p1_len
          std_errsum_d = std(err_accum_d, [], 1);
 
          % Final cumulative errors
-         err_means_g(p1_ind, p2_ind) = avg_errsum_g(end);
-         err_means_d(p1_ind, p2_ind) = avg_errsum_d(end);
+         if cnt_diffs
+            err_means_g(p1_ind, p2_ind) = avg_errsum_g(end);
+            err_means_d(p1_ind, p2_ind) = avg_errsum_d(end);
+
+            err_stds_g(p1_ind, p2_ind) = std_errsum_g(end);
+            err_stds_d(p1_ind, p2_ind) = std_errsum_d(end);
+         else
+            err_means_g(p1_ind, p2_ind) = avg_errsum_g(1,end, p2_ind,p1_ind);
+            err_means_d(p1_ind, p2_ind) = avg_errsum_d(1,end, p2_ind,p1_ind);
+            
+            err_stds_g(p1_ind, p2_ind) = std_errsum_g(1, end, p2_ind, p1_ind);
+            err_stds_d(p1_ind, p2_ind) = std_errsum_d(1, end, p2_ind, p1_ind);            
+         end
       end
-      
-      % err_sds_g(p1_ind, p2_ind) = std_errsum_g(end);
-      % err_sds_d(p1_ind, p2_ind) = std_errsum_d(end);
 
    end % inner param loop
    

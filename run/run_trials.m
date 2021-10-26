@@ -130,7 +130,7 @@ function [dW, sigma] = get_dW(rule, ps, Wr, delta_r, in, hid, out, iter, sigma, 
 
    % Feed-forward noise
    if strcmp(rule, 'ff')
-      if iter > ps.n_per_epoch * ps.n_inputs
+      if iter > ps.n_per_epoch * tsk.n_inputs
          
          y_tilde_g = (Wr'*delta_r);
          

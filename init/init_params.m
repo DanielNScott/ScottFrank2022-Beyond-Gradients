@@ -8,15 +8,15 @@ if sim == 1
    % Simulation 1 is the inessential interference demonstration
    
    % ---- Simulation params ----
-   params.dim_in   = 8;
-   params.dim_hid  = 8;
-   params.dim_out  = 8;
-   params.n_inputs = 4;
+   params.dim_in   = 10; % 8 for demo, 10 for loop
+   params.dim_hid  = 10; % 8 for demo, 10 for loop
+   params.dim_out  = 10; % 8 for demo, 10 for loop
+   params.n_inputs = 8;  % 4 for demo,  8 for loop
 
    params.p_grade  = 0.8;
 
    params.n_per_epoch = 25;
-   params.n_epochs = 10;
+   params.n_epochs    = 15; % 10 for demo, 15 for loop
 
    params.lr  = 0.01;
 
@@ -42,20 +42,20 @@ elseif sim == 2
    % ---- Simulation params ----
    params.dim_in   = 4;
    params.dim_hid  = 4;
-   params.dim_out  = 2;
-   params.n_inputs = 18;
+   params.dim_out  = 4;
+   params.n_inputs = 12;
 
    params.p_grade  = 0.8;
 
-   params.n_per_epoch = 250;
-   params.n_epochs = 5;
+   params.n_per_epoch = 25;
+   params.n_epochs = 20;
 
-   params.lr  = 0.001;
+   params.lr  = 0.01;
 
    params.rho = 0.5;
 
-   params.w0_diag = 0;
-   params.w0_std  = 0.0;
+   params.w0_diag = 0.2;
+   params.w0_std  = 0.2;
    params.w0_snr  = 0.0;
 
    % Options: basic, ff, or feats

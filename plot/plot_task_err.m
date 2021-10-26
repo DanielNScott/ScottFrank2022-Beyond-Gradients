@@ -3,24 +3,25 @@ function [] = plot_task_err(tsk, hist)
    figure()
    subplot(1,2,1)
    for i = 1:tsk.n_tuples
-      plot(hist.g.err(i,:)); hold on
+      plot(hist.g.err(i,:), 'LineWidth', 2); hold on
    end
    ylims = ylim();
+   ylims(1) = 0;
    grid on
 
-   title('Gradient Based Interference Example')
+   title('Gradient Algorithm')
    xlabel('Trial Number')
    ylabel('Squared Error')
    legend({'Task 1', 'Task 2', '...'})
 
    subplot(1,2,2)
    for i = 1:tsk.n_tuples
-      plot(hist.d.err(i,:)); hold on
+      plot(hist.d.err(i,:), 'LineWidth', 2); hold on
    end
    grid on
    ylim(ylims);
 
-   title('Projection Based Interference Example')
+   title('Projection Algorithm')
    xlabel('Trial Number')
    ylabel('Squared Error')
    legend({'Task 1', 'Task 2', '...'})
