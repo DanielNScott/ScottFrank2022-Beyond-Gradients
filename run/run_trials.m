@@ -176,17 +176,42 @@ function [dW, sigma] = get_dW(rule, ps, Wr, delta_r, in, hid, out, iter, sigma, 
    % Pre-defined input and output filters
    if strcmp(rule, 'iofilts')
 
-      % Output filters
-      y_tilde_g = normalize( Wr'*delta_r );
-      y_tilde_d = normalize( tsk.Q_list{task_num}*y_tilde_g);
-      
-      % Input filters
+      dW = zeros(ps.dim_hid, ps.dim_in);
+
+      y_raw      = Wr'*delta_r;
+      y_tilde_g  = normalize(y_raw);
       mu_tilde_g = normalize(in);      
-      mu_tilde_d = normalize(tsk.P_list{task_num}*in);
       
-      % Weight update
-      dW = ps.lr* (ps.p_grade* y_tilde_d*mu_tilde_d' + (1-ps.p_grade)* y_tilde_g*mu_tilde_g');
+      for j = 1:ps.comp
+         % Output filters
+         y_tilde_d = normalize( tsk.Q_list{task_num,j}*y_raw);
+         %y_tilde_d = tsk.Q_list{task_num,j}*y_raw;
+
+         % Input filters
+         mu_tilde_d = normalize(tsk.P_list{task_num,j}*in);
+         %mu_tilde_d = tsk.P_list{task_num,j}*in;
+
+         % Weight update
+         dW = dW + y_tilde_d*mu_tilde_d' * norm(y_raw)* norm(in);
+      end
       
+      % Notes:
+      %
+      % Normalization for projection algorithm is on rank one updates.
+      % Hence the max norm and L2 norm coincide. Here, we want to do the most
+      % conservative thing, so we set the L2 norm to the same L2 norm as the
+      % gradient update.
+      
+      ntype = 2;
+      %ntype = 'fro';
+      
+      dWg = y_raw*mu_tilde_g';
+      
+      dW = dW *norm(dWg, ntype)/norm(dW, ntype);
+      
+      dW = ps.p_grade* dW + (1-ps.p_grade)* dWg;
+      dW = ps.lr* dW;
+         
    end
    
    if strcmp(rule, 'adapt')

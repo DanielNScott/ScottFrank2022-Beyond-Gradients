@@ -33,25 +33,71 @@ elseif strcmp(ps.task, 'ff')
    [tsk.ins, tsk.trgs] = get_random_task_compositional(tsk.Wr_list, ps.dim_in);
 
 elseif strcmp(ps.task, 'feats')
-
+   
    % Features task
    tsk.depth = 0;
    
-   tsk.Wr_list{1} = [eye(2), zeros(2)];
-   tsk.Wr_list{2} = [zeros(2), eye(2)];
+   % Frames for input and hidden reps
+   A = getRandomFrame(ps.n_inputs);
+   B = getRandomFrame(ps.n_inputs);
    
-   tsk.Q_list{1} = [eye(2)  , zeros(2); zeros(2,4)];
-   tsk.Q_list{2} = [zeros(2,4); zeros(2),   eye(2)];
-  
-   tsk.P_list{1} = [zeros(2,7);  zeros(2), eye(2), zeros(2,3); zeros(3,7)];
-   tsk.P_list{2} = [zeros(2,7);  zeros(2,7); zeros(2,4), eye(2), zeros(2,1); zeros(1,7)];
+   % Save them for debugging algorithm
+   tsk.A = A;
+   tsk.B = B;
+    
+   % Template non-orthogonal basis vector
+   in  = normalize([ones(ps.comp,1); zeros(ps.n_inputs - ps.comp,1)]);
    
-   tsk.n_per_task(1) = 18;
-   tsk.n_per_task(2) = 18;
+   I = eye(ps.n_inputs);
+   
+   % 
+   for i = 1:ps.n_inputs
+         
+      % Generate inputs and targets
+      tsk.ins{i ,1} = A*circshift(in, i-1);
+      tsk.trgs{i,1} = B*circshift(in, i-1);
 
-   [tsk.ins, tsk.trgs] = get_feats_task();
+      % Readout weights
+      tsk.Wr_list{i} = I;
+      
+      % 
+      tsk.n_per_task(i) = 1;
+      
+      for j = 1:ps.comp
+         
+         % Column for the present feature vec
+         cnum = mod(i+j-2,10)+1;
+
+         % Random permutation of other features to link
+         rpi = randperm(ps.n_inputs);
+         rpi = rpi(rpi ~= cnum);
+         
+         rpo = randperm(ps.n_inputs);
+         rpo = rpo(rpo ~= cnum);
+         
+         links_in  = [cnum, rpi(1:(ps.link-1))];
+         links_out = [cnum, rpo(1:(ps.link-1))];
+         
+         rem_in  = setdiff(1:ps.n_inputs, links_in);
+         rem_out = setdiff(1:ps.n_inputs, links_in);
+
+         % Other columns, to project out
+         aux_in  = A*I(:,rem_in );
+         aux_out = B*I(:,rem_out);
+
+         % Input projectors
+         tsk.P_list{i,j} = I - aux_in  *aux_in';
+         
+         % Output projectors
+         tsk.Q_list{i,j} = I - aux_out *aux_out';
+      end
+      % Can verify that e.g.
+      %    e1 = A'*tsk.P_list{1,2}*tsk.ins{1}
+      %    e2 = A'*tsk.P_list{1,2}*tsk.ins{2}
+      
+   end
    
-   tsk.n_tasks = 2;
+   tsk.n_tasks = ps.n_inputs;
 
 end
 

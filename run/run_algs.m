@@ -12,7 +12,6 @@ rule = 'gd';
 hist.g = run_trials(ps, tsk, hist.g, rule);
 
 % Learn the task with noise-projected gradients
-rule = 'project';
-hist.d = run_trials(ps, tsk, hist.d, rule);
+hist.d = run_trials(ps, tsk, hist.d, ps.rule);
 
 end
