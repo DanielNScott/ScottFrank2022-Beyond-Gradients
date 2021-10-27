@@ -68,9 +68,9 @@ switch(loop_code)
    case(2)
       % (Learning Rate) x (Epoch Trial Count)
       
-      min_count = 15;
-      max_count = 115;
-      inc_count = 10;
+      min_count = 5;
+      max_count = 40;
+      inc_count = 5;
       
       lp.p1_min = min_count;
       lp.p1_max = max_count;
@@ -80,15 +80,15 @@ switch(loop_code)
       
       lp.p1_do_addnl = '';
       
-      lp.p2_min  = 0.045;
-      lp.p2_max  = 0.05;
-      lp.p2_inc  = 0.005;
+      lp.p2_min  = 0.004;
+      lp.p2_max  = 0.02;
+      lp.p2_inc  = 0.002;
       lp.p2_name = {'lr'};
       lp.p2_desc = 'lr';
       
-      lp.p2_do_addnl = 'ps.n_epochs = 15  *ceil(0.01/p2);';
+      lp.p2_do_addnl = 'ps.n_epochs = 30;';
       
-      lp.n_iters = 10;
+      lp.n_iters = 200;
 
 
    case(3)
@@ -130,7 +130,7 @@ switch(loop_code)
 
       lp.p2_do_addnl = '';
 
-      lp.n_iters = 300;
+      lp.n_iters = 100;
 
 
    case(5)
@@ -217,6 +217,49 @@ switch(loop_code)
       lp.p2_do_addnl = '';
       
       lp.n_iters = 200;
+      
+      
+   case(9)
+      % (Noise)
+      lp.p1_min = 0.0;
+      lp.p1_max = 0.3;
+      lp.p1_inc = 0.3;
+      lp.p1_name = {'w0_diag'};
+      lp.p1_desc = 'Signal';
+
+      lp.p1_do_addnl = '';
+
+      lp.p2_min  = 0.0;
+      lp.p2_max  = 0.3;
+      lp.p2_inc  = 0.3;
+      lp.p2_name = {'w0_std'};
+      lp.p2_desc = 'Noise';
+
+      lp.p2_do_addnl = '';
+
+      lp.n_iters = 500;
+      
+      
+   case(10)
+      % (Limited projection parameter)
+      lp.p1_min = 0.1;
+      lp.p1_max = 0.1;
+      lp.p1_inc = 0.1;
+      lp.p1_name = {'w0_std'};
+      lp.p1_desc = 'Noise';
+
+      lp.p1_do_addnl = '';
+
+      lp.p2_min  = 0.0;
+      lp.p2_max  = 0.95;
+      lp.p2_inc  = 0.05;
+      lp.p2_name = {'p_grade'};
+      lp.p2_desc = 'Anisotropy';
+
+      lp.p2_do_addnl = '';
+
+      lp.n_iters = 500;
+      
 end
 
 %% Derived loop parameters

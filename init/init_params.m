@@ -54,8 +54,8 @@ elseif sim == 2
 
    params.rho = 0.5;
 
-   params.w0_diag = 0.2;
-   params.w0_std  = 0.2;
+   params.w0_diag = 0.1;
+   params.w0_std  = 0.1;
    params.w0_snr  = 0.0;
 
    % Options: basic, ff, or feats
