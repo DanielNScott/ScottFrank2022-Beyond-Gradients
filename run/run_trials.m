@@ -18,40 +18,36 @@ hist.gs = NaN(ps.dim_out, tsk.n_tuples, tsk.n_trials);
 % Init most-recent-error data
 err = zeros(size(hist.err,1),1);
 
-% Adaptive noise covariance matrix (for some algs)
-sigma  = eye(ps.dim_hid);
+%
+Ih = eye(ps.dim_hid);
+Ii = eye(ps.dim_in);
+
 
 % Stimulus presentation loop
 iter = 0;
 for i = tsk.stim_order'
    
-   task = tsk.tuples(i, 1);
+   % Task meta-data
+   tnum = tsk.tuples(i, 1);
    item = tsk.tuples(i, 2);
 
-   in  = tsk.ins{ task, item};
-   trg = tsk.trgs{task, item};
-      
+   % Task tuple
+   in   = tsk.ins{ tnum, item};
+   trg  = tsk.trgs{tnum, item};
+   Wr   = tsk.Wrs{tnum};
+   
    for trial = 1:ps.n_per_epoch
 
+      % ---- Book keeping ---------------------------%
       iter = iter+1;
       
-      % Current readout
-      Wr = tsk.Wr_list{task};
-      
-      % Hidden and output responses
-      hid = W*in;
-      out = Wr*hid;
-      
-      % Target output error
-      delta_r = trg - out;
-      
       % Calculate the errors & grads on every io_pair
-      [err, gs] = get_errs(err, tsk, W, ps.save_grads, iter);
+      [err, gs] = get_errs(err, tsk, W, ps.save_grads);
       hist.err(:,iter)  = err;
       %hist.gs(:,:,iter) = gs;
       
       % Store the last 10 times the network has seen this item
-      item_lin_ind = (task-1)*tsk.n_inputs + item;
+      item_lin_ind = (tnum-1)*tsk.n_inputs + item;
       last_seen(item_lin_ind, :) = [last_seen(item_lin_ind, 2:end), iter];
       counter(item_lin_ind) = counter(item_lin_ind) +1;
       
@@ -65,37 +61,90 @@ for i = tsk.stim_order'
          delta = 1;
       end
       
-      % Get weight change
-      if ~strcmp(rule, 'gd') && delta > 0.05
-         [dW, sigma] = get_dW(rule, ps, Wr, delta_r, in, hid, out, iter, sigma, tsk, task);
-      else
-         dW = ps.lr *Wr' *delta_r *in';
-      end
+      
+      % ---- Dynamics using oracle --------%
+      %
+      % We calculate these for comparison even if
+      % we don't actually use them for the updates.
+      
+      % Hidden and output responses
+      hid = W*in;
+      out = Wr*hid;
 
+      % Target output error
+      delta_r = trg - out;
+
+      % Get weight change
+      %if ~strcmp(rule, 'gd') && delta > 0.05
+         %dW = get_dW(rule, ps, Wr, delta_r, in, hid, out, iter, tsk, tnum);
+         [filts, dW] = get_filts(rule, ps, Wr, delta_r, in, hid, out, iter, tsk, tnum);
+
+         % If we're not using an S-oracle, track gradients to project out.
+         if ~ps.s_oracle && trial == 1 && iter < ps.n_per_epoch*ps.n_inputs
+            yg  = filts.yg;
+               
+            % Overwrite the projection, coloring, & covar matrices
+            for index = setdiff(1:ps.n_inputs, tnum)
+               pg  = tsk.Qs{index}*yg;
+               pgn = norm(pg);
+               R   = (pg * pg')./(pgn^2);
+            
+               tsk.Qs{index} = tsk.Qs{index} - R;
+               %tsk.Th{in} = eye(ps.dim_hid);
+               %tsk.Sh{in} = eye(ps.dim_hid);
+            end
+         end
+         %else
+      %   dW = ps.lr *Wr' *delta_r *in';
+      %end
+      
+      
+      % ---- Dynamics using noise --------%
+      if ~ps.g_oracle
+         
+         % Accumulate a weight update
+         if strcmp('gd', rule)
+            dWa = get_dW_acc(Wr, W, in, trg, Ih, Ih, ps);
+            
+         elseif strcmp('project', rule)
+            dWa = get_dW_acc(Wr, W, in, trg, tsk.Th{tnum}, tsk.Sh{tnum}, ps);
+            
+         elseif strcmp(rule, 'iofilts')
+            dWa = get_dW_acc_io(Wr, W, in, trg, tsk.Th(tnum,:), tsk.Ti(tnum,:), tsk.Sh(tnum,:), tsk.Si(tnum,:), ps);            
+            
+         end
+         
+         % Do separately so we can inspect
+         dW  = dWa*norm(dW,2)/norm(dWa,2);
+      end
+      
+      
+      % ---- Update and save --------%
+      
       % Apply update
       W = W + dW;
-      
+
       % Save W
       hist.W(iter,:,:) = W;
-
+         
    end
 end
 
 end
 
-function [err, gs] = get_errs(err, tsk, W, save_grads, iter)
+function [err, gs] = get_errs(err, tsk, W, save_grads)
 
    gs = [];
    % 
    for i = 1:tsk.n_tuples
 
-      task = tsk.tuples(i, 1);
+      tnum = tsk.tuples(i, 1);
       item = tsk.tuples(i, 2);
 
-      in  = tsk.ins{ task, item};
-      trg = tsk.trgs{task, item};
+      in  = tsk.ins{ tnum, item};
+      trg = tsk.trgs{tnum, item};
       
-      Wr  = tsk.Wr_list{task};
+      Wr  = tsk.Wrs{tnum};
       
       hid = W*in;
       out = Wr*hid;
@@ -117,114 +166,3 @@ function [err, gs] = get_errs(err, tsk, W, save_grads, iter)
 
 end
 
-
-function [dW, sigma] = get_dW(rule, ps, Wr, delta_r, in, hid, out, iter, sigma, tsk, task_num)
-
-   alpha = 0.999;
-
-   % Gradient, i.e. Widrow-Hoff
-   if strcmp(rule, 'gd')
-      y_tilde = (Wr'*delta_r);
-      dW = ps.lr* y_tilde *in';
-   end
-
-   % Feed-forward noise
-   if strcmp(rule, 'ff')
-      if iter > ps.n_per_epoch * tsk.n_inputs
-         
-         y_tilde_g = (Wr'*delta_r);
-         
-         y_tilde_d = delta_r'*out * hid;
-         
-         if ~all(y_tilde_d == 0)
-            y_tilde_d = y_tilde_d* sum(abs(y_tilde_g))/sum(abs(y_tilde_d));
-
-         end
-            %y_tilde = y_tilde_d.*y_tilde_g;
-            %y_tilde = y_tilde*sum(y_tilde_g)/sum(y_tilde_d);
-            
-         if ~all(y_tilde_d == 0)
-            y_tilde_d = y_tilde_d.*hid;
-            y_tilde_d = y_tilde_d* sum(abs(y_tilde_g))/sum(abs(y_tilde_d));
-         end
-
-         y_tilde = y_tilde_d*ps.p_grade + y_tilde_g*(1-ps.p_grade);
-
-      else
-         y_tilde = (Wr'*delta_r);
-      end
-      dW = ps.lr* y_tilde *in';
-   end
-
-   % Projection based
-   if strcmp(rule, 'project')
-
-      % Gradient filter
-      y_tilde_g = (Wr'*delta_r);
-
-      % Rotation onto kernel intersection
-      y_norm  = norm(y_tilde_g);
-      
-      y_tilde_d = tsk.P_list{task_num}*y_tilde_g;
-
-      y_tilde = ps.p_grade*y_tilde_d + (1-ps.p_grade)*y_tilde_g;
-      y_tilde = normalize(y_tilde)* y_norm;
-
-      dW = ps.lr*y_tilde*in';
-   end
-   
-   % Pre-defined input and output filters
-   if strcmp(rule, 'iofilts')
-
-      dW = zeros(ps.dim_hid, ps.dim_in);
-
-      y_raw      = Wr'*delta_r;
-      y_tilde_g  = normalize(y_raw);
-      mu_tilde_g = normalize(in);      
-      
-      for j = 1:ps.comp
-         % Output filters
-         y_tilde_d = normalize( tsk.Q_list{task_num,j}*y_raw);
-         %y_tilde_d = tsk.Q_list{task_num,j}*y_raw;
-
-         % Input filters
-         mu_tilde_d = normalize(tsk.P_list{task_num,j}*in);
-         %mu_tilde_d = tsk.P_list{task_num,j}*in;
-
-         % Weight update
-         dW = dW + y_tilde_d*mu_tilde_d' * norm(y_raw)* norm(in);
-      end
-      
-      % Notes:
-      %
-      % Normalization for projection algorithm is on rank one updates.
-      % Hence the max norm and L2 norm coincide. Here, we want to do the most
-      % conservative thing, so we set the L2 norm to the same L2 norm as the
-      % gradient update.
-      
-      ntype = 2;
-      %ntype = 'fro';
-      
-      dWg = y_raw*mu_tilde_g';
-      
-      dW = dW *norm(dWg, ntype)/norm(dW, ntype);
-      
-      dW = ps.p_grade* dW + (1-ps.p_grade)* dWg;
-      dW = ps.lr* dW;
-         
-   end
-   
-   if strcmp(rule, 'adapt')
-      y_tilde = (Wr'*delta_r);
-      %dW = ps.lr* y_tilde *in';
-      
-      y_tilde_n = y_tilde./norm(y_tilde);
-      
-      dW = ps.lr* sigma * y_tilde_n;
-      
-      dsigma = y_tilde_n*y_tilde_n';
-   end
-   
-   %sigma = alpha*sigma + (1-alpha)*dsigma;
-
-end

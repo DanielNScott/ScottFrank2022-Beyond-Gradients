@@ -33,8 +33,13 @@ histogram((err_accum_d(:,end) ./ err_accum_g(:,end)),'BinEdges',0:0.05:1.2, 'Nor
 hold on
 plot(xi,f,'LineWidth',2);
 grid on
-title('')
-
+title('Relative Error Histogram, No Covar. Oracle')
+ylims = ylim();
+plot([1,1], [0,ylims(2)], '--k', 'LineWidth', 2)
+legend({'Bins','KDE', 'Cutoff'})
+xlim([0.2,1.4])
+xlabel('Fraction Grad. Descent')
+ylabel('Density')
 
 
 % Improvement by depth
