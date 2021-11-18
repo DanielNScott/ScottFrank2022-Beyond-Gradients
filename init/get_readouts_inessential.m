@@ -1,4 +1,4 @@
-function [Wr, Qr, Ker, P] = get_readouts_inessential(m, n)
+function tsk = get_readouts_inessential(tsk, m, n, p_grade)
 % Inputs:
 % m - a vector of integers of length (n-1)
 % n - the ambient dimension of the space
@@ -67,7 +67,28 @@ for i = 1:nKers
    % Compute the projection onto the kernel of that row space
    P{i} = eye(n) - q(:,1:(nKers-1))*q(:,1:(nKers-1))';
 
+   % Save basis vectors for column space of projection & kernel 
+   vecs_base{i} = q(:,nKers:end);
+   vecs_null{i} = q(:,1:(nKers-1));
+   
+   
+   rank = size(vecs_base{i},2);
+   null = nKers-1;
+   
+   xform{i} = [vecs_base{i}, vecs_null{i}];
+   xform{i} = xform{i}*diag( [ones(1,rank), ones(1, null)*sqrt(1-p_grade) ]);
+   
+   sigma{i} = xform{i}*xform{i}';
 end
+
+% Package
+tsk.Wrs = Wr;
+tsk.Qs  = P; 
+tsk.Th  = xform;
+tsk.Sh  = sigma;
+
+%tsk.vecs_base = vecs_base;
+%tsk.vecs_null = vecs_null;
 
 end
 

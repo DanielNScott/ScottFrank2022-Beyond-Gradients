@@ -231,7 +231,7 @@ switch(loop_code)
 
       lp.p2_min  = 0.0;
       lp.p2_max  = 0.3;
-      lp.p2_inc  = 0.3;
+      lp.p2_inc  = 0.05;
       lp.p2_name = {'w0_std'};
       lp.p2_desc = 'Noise';
 

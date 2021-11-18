@@ -1,8 +1,16 @@
 function params = init_params(sim)
 
-% ---- Aux. params ----
 % Turns plotting on and off IN THE PARAMETER LOOP.
 params.plot = 0;
+
+% Oracle vs adaptive
+params.g_oracle = 0;      % Use oracle for gradients?
+params.g_acc_n  = 1000;   % Number of accumulation steps
+params.lsd      = 0.01;   % lambda standard deviation
+params.g_stats  = 0;      % Compute the stats of g estimates
+params.g_both   = 0;      % Rerun computations w/o oracle too.
+
+params.s_oracle = 1;      % Use oracle for variances?
 
 if sim == 1
    % Simulation 1 is the inessential interference demonstration

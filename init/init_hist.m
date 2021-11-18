@@ -13,6 +13,10 @@ if ps.save_grads
    hist.grads = zeros(ps.dim_hid, ps.dim_in, tsk.n_tuples, tsk.n_trials);
 end
 
+if ps.g_stats && ~ps.g_oracle
+   hist.corrs = zeros(tsk.n_trials, 1);
+end
+
 % 
 hist.W = zeros(tsk.n_trials, ps.dim_hid, ps.dim_in);
 

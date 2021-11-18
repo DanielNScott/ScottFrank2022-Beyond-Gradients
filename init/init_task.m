@@ -5,12 +5,21 @@ if strcmp(ps.task, 'basic')
    tsk = struct();
    
    % Get readout weights with appropriate kernel overlap
-   [tsk.Wr_list, ~, ~, tsk.P_list] = get_readouts_inessential([0,ps.n_inputs,0], ps.dim_in);
+   tsk = get_readouts_inessential(tsk, [0,ps.n_inputs,0], ps.dim_in, ps.p_grade);
+
+   if ~ps.s_oracle
+      % Overwrite the projection, coloring, & covar matrices
+      for i = 1:ps.n_inputs
+         tsk.Qs{i} = eye(ps.dim_hid);
+         tsk.Th{i} = eye(ps.dim_hid);
+         tsk.Sh{i} = eye(ps.dim_hid);
+      end
+   end
 
    % Get random task using these readouts
-   [~, ins, ~, trgs, ~] = get_random_task_inessential(tsk.Wr_list, tsk.P_list, ps.dim_in, ps.n_inputs, ps.rho);
+   [~, ins, ~, trgs, ~] = get_random_task_inessential(tsk.Wrs, tsk.Qs, ps.dim_in, ps.n_inputs, ps.rho);
    
-   tsk.n_tasks = length(tsk.Wr_list);
+   tsk.n_tasks = length(tsk.Wrs);
    
    tsk.n_per_task = ones(tsk.n_tasks, 1);
    
@@ -21,19 +30,27 @@ if strcmp(ps.task, 'basic')
       end
    end
    tsk.depth = 0;
+   
+   for i = 1:tsk.n_tasks
+      tsk.Ps{i} = eye(ps.dim_in);
+   end
 
 elseif strcmp(ps.task, 'ff')
    % Hierarchical task
    tsk.depth = log2(ps.dim_in);
-   [tsk.Wr_list, tsk.P_list] = get_readouts_compositional(tsk.depth);
+   [tsk.Wrs, tsk.Qs] = get_readouts_compositional(tsk.depth);
 
    %tsk.n_tasks = repmat(tsk.depth + 1, [tsks.n_tasks,1]);
    
    tsk.n_tasks = tsk.depth + 1;
    tsk.n_per_task = repmat(ps.dim_in, [tsk.n_tasks ,1]);
 
-   [tsk.ins, tsk.trgs] = get_random_task_compositional(tsk.Wr_list, ps.dim_in);
+   [tsk.ins, tsk.trgs] = get_random_task_compositional(tsk.Wrs, ps.dim_in);
 
+   for i = 1:tsk.n_tasks
+      tsk.Ps{i} = eye(ps.dim_in);
+   end
+   
 elseif strcmp(ps.task, 'feats')
    
    % Features task
@@ -52,6 +69,10 @@ elseif strcmp(ps.task, 'feats')
    
    I = eye(ps.n_inputs);
    
+   % For debugging:
+   %A = I;
+   %B = I;
+   
    % 
    for i = 1:ps.n_inputs
          
@@ -60,7 +81,7 @@ elseif strcmp(ps.task, 'feats')
       tsk.trgs{i,1} = B*circshift(in, i-1);
 
       % Readout weights
-      tsk.Wr_list{i} = I;
+      tsk.Wrs{i} = I;
       
       % 
       tsk.n_per_task(i) = 1;
@@ -88,16 +109,45 @@ elseif strcmp(ps.task, 'feats')
          aux_out = B*I(:,rem_out);
 
          % Input projectors
-         tsk.P_list{i,j} = I - aux_in  *aux_in';
+         tsk.Ps{i,j} = I - aux_in  *aux_in';
          
          % Output projectors
-         tsk.Q_list{i,j} = I - aux_out *aux_out';
+         tsk.Qs{i,j} = I - aux_out *aux_out';
+         
+         % Save basis vectors for proj. col space & kernel
+         vecs_base_in{i,j} = A*I(:,links_in);
+         vecs_null_in{i,j} = aux_in;
+
+         vecs_base_out{i,j} = B*I(:,links_in);
+         vecs_null_out{i,j} = aux_out;
+         
+         rank_out = size(vecs_base_out{i,j},2);
+         null_out = size(vecs_null_out{i,j},2);
+         
+         rank_in = size(vecs_base_in{i,j},2);
+         null_in = size(vecs_null_in{i,j},2);
+
+         Th{i,j} = [vecs_base_out{i,j}, vecs_null_out{i,j}];
+         Th{i,j} = Th{i,j}*diag( [ones(1,rank_out), ones(1, null_out)*sqrt(1-ps.p_grade) ]);
+         
+         Ti{i,j} = [vecs_base_in{i,j}, vecs_null_in{i,j}];
+         Ti{i,j} = Ti{i,j}*diag( [ones(1,rank_in), ones(1, null_in)*sqrt(1-ps.p_grade) ]);
+
+         Sh{i,j} = Th{i,j}*Th{i,j}';
+         Si{i,j} = Ti{i,j}*Ti{i,j}';
+         
       end
       % Can verify that e.g.
-      %    e1 = A'*tsk.P_list{1,2}*tsk.ins{1}
-      %    e2 = A'*tsk.P_list{1,2}*tsk.ins{2}
+      %    e1 = A'*tsk.Ps{1,2}*tsk.ins{1}
+      %    e2 = A'*tsk.Ps{1,2}*tsk.ins{2}
       
    end
+   
+   tsk.Th = Th;
+   tsk.Ti = Ti;
+   
+   tsk.Sh = Sh;
+   tsk.Si = Si;
    
    tsk.n_tasks = ps.n_inputs;
 

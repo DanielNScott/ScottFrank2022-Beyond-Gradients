@@ -34,6 +34,16 @@ err_means_d = zeros(lp.p1_len, lp.p2_len);
 err_stds_g = zeros(lp.p1_len, lp.p2_len);
 err_stds_d = zeros(lp.p1_len, lp.p2_len);
 
+if ps.g_both
+   err_means_go = zeros(lp.p1_len, lp.p2_len);
+   err_means_do = zeros(lp.p1_len, lp.p2_len);
+   
+   err_stds_go = zeros(lp.p1_len, lp.p2_len);
+   err_stds_do = zeros(lp.p1_len, lp.p2_len);
+end
+
+
+
 if ~cnt_diffs
    err_accum_g = zeros(lp.n_iters, tsk.n_trials, lp.p2_len, lp.p1_len);
    err_accum_d = zeros(lp.n_iters, tsk.n_trials, lp.p2_len, lp.p1_len);
@@ -103,6 +113,11 @@ for p1_ind = 1:lp.p1_len
          err_sum_d = sum(hist.d.err,1);
          err_sum_g = sum(hist.g.err,1);
          
+         if ps.g_both
+            err_sum_do = sum(hist.do.err,1);
+            err_sum_go = sum(hist.go.err,1);
+         end
+         
          % Update loop accumulators
          if cnt_diffs
             err_accum_d(iter, :) = cumsum(err_sum_d); 
@@ -110,6 +125,11 @@ for p1_ind = 1:lp.p1_len
          else
             err_accum_d(iter, :, p2_ind, p1_ind) = cumsum(err_sum_d); 
             err_accum_g(iter, :, p2_ind, p1_ind) = cumsum(err_sum_g);
+            
+            if ps.g_both
+               err_accum_do(iter, :, p2_ind, p1_ind) = cumsum(err_sum_do); 
+               err_accum_go(iter, :, p2_ind, p1_ind) = cumsum(err_sum_go);
+            end
             
             %err_fin_d(iter, :, p2_ind, p1_ind) = err_sum_d(end);
             %err_fin_g(iter, :, p2_ind, p1_ind) = err_sum_g(end);
@@ -139,6 +159,14 @@ for p1_ind = 1:lp.p1_len
          std_errsum_g = std(err_accum_g, [], 1);
          std_errsum_d = std(err_accum_d, [], 1);
 
+         if ps.g_both
+            avg_errsum_go = mean(err_accum_go,1);
+            avg_errsum_do = mean(err_accum_do,1);
+
+            std_errsum_go = std(err_accum_go, [], 1);
+            std_errsum_do = std(err_accum_do, [], 1);
+         end
+         
          % Final cumulative errors
          if cnt_diffs
             err_means_g(p1_ind, p2_ind) = avg_errsum_g(end);
@@ -151,7 +179,16 @@ for p1_ind = 1:lp.p1_len
             err_means_d(p1_ind, p2_ind) = avg_errsum_d(1,end, p2_ind,p1_ind);
             
             err_stds_g(p1_ind, p2_ind) = std_errsum_g(1, end, p2_ind, p1_ind);
-            err_stds_d(p1_ind, p2_ind) = std_errsum_d(1, end, p2_ind, p1_ind);            
+            err_stds_d(p1_ind, p2_ind) = std_errsum_d(1, end, p2_ind, p1_ind);
+            
+            if ps.g_both
+               err_means_go(p1_ind, p2_ind) = avg_errsum_go(1,end, p2_ind,p1_ind);
+               err_means_do(p1_ind, p2_ind) = avg_errsum_do(1,end, p2_ind,p1_ind);
+
+               err_stds_go(p1_ind, p2_ind) = std_errsum_go(1, end, p2_ind, p1_ind);
+               err_stds_do(p1_ind, p2_ind) = std_errsum_do(1, end, p2_ind, p1_ind);
+            end
+            
          end
       end
 

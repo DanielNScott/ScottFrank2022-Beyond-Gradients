@@ -4,21 +4,6 @@ function [] = plot_loop_data(lp, err_means_g, err_means_d, avg_errsum_g, avg_err
 % ---------------------------------------------------
 % This is the phase diagram-like heatmap
 % ---------------------------------------------------
-figure()
-imagesc((err_means_g - err_means_d)./err_means_g)
-
-xlabel(lp.p2_desc, 'Interpreter', 'None')
-ylabel(lp.p1_desc, 'Interpreter', 'None')
-
-xticklabels(lp.p2_list)
-yticklabels(lp.p1_list)
-
-xticklabels()
-
-title('Relative Performance')
-cb = colorbar();
-%ylabel(cb,'\bf{Improvement Relative to Gradient Descent}')
-set(get(cb,'YLabel'),'Rotation',270)
 
 
 % ---------------------------------------------------
@@ -42,36 +27,19 @@ xlabel('Trial Number')
 legend({'Ratio of Means, Ensemble', 'Ratio of Means, Destructive', 'Mean of Ratios, Ensemble', 'Mean of Ratios, Destructive'})
 %xlim([0,18000])
 
+% Improvement density plot
 [f,xi] = ksdensity((err_accum_d(:,end) ./ err_accum_g(:,end)));
 histogram((err_accum_d(:,end) ./ err_accum_g(:,end)),'BinEdges',0:0.05:1.2, 'Normalization','pdf')
 hold on
 plot(xi,f,'LineWidth',2);
 grid on
-title('')
-
-
-err    = squeeze(mean(err_accum_d(:,end,:,1) ./err_accum_g(:,end,:,1),1));
-err_sd = squeeze(std(err_accum_d(:,end,:,1) ./err_accum_g(:,end,:,1),[],1));
-
-pvals = 0.05:0.05:0.95;
-plot(pvals, err); hold on;
-plot(pvals, err + err_sd, '--k')
-plot(pvals, err - err_sd, '--k')
-
-
-% Weight Trajectory Comparison
-figure()
-plot(mean(accum_w_diag_g,1), 'LineWidth', 2)
-hold on
-plot(mean(accum_w_diag_d,1), 'LineWidth', 2)
-plot(mean(accum_w_off_g,1) , 'LineWidth', 2)
-plot(mean(accum_w_off_d,1) , 'LineWidth', 2)
-grid on
-legend({'G, diag', 'D, diag', 'G, off', 'D, off'})
-title('Weight Trajectory Comparison')
-xlabel('Trial Number')
-ylabel('Weight Sum')
-%xlim([0,18000])
+title('Relative Error Histogram, No Covar. Oracle')
+ylims = ylim();
+plot([1,1], [0,ylims(2)], '--k', 'LineWidth', 2)
+legend({'Bins','KDE', 'Cutoff'})
+xlim([0.2,1.4])
+xlabel('Fraction Grad. Descent')
+ylabel('Density')
 
 
 % Improvement by depth
