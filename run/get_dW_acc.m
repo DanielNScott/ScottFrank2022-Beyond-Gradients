@@ -1,4 +1,4 @@
-function dW = get_dW_acc(Wr, W, in, trg, Th, Sh, ps)
+function [dW, y] = get_dW_acc(Wr, W, in, trg, Th, Sh, ps)
 
 % Initialize grad accumulation
 dW = zeros(ps.dim_hid, ps.dim_in);
@@ -12,7 +12,10 @@ out_bar = Wr*hid_bar;
    
 % Average target output error
 delta_r = trg - out_bar;
-   
+
+% Output filter to accumulate for diagnostics
+y = zeros(ps.dim_hid,1);
+
 % Accumulation loop
 for subtrial = 1:ps.g_acc_n
    
@@ -30,9 +33,13 @@ for subtrial = 1:ps.g_acc_n
 
    % Gradient accumulation
    dW = dW + rpe*l_h*in';
+   
+   % Accumulate the output filter specifically, for comparison
+   y  = y + rpe*l_h;
 end
 
 % Normalize (we have ignored factor of 2 in the analytic calculations)
 dW = ps.lr* 1/2 *dW /ps.g_acc_n /(ps.lsd^2);
+y  = y/norm(y);
 
 end

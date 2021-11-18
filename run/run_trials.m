@@ -104,10 +104,10 @@ for i = tsk.stim_order'
          
          % Accumulate a weight update
          if strcmp('gd', rule)
-            dWa = get_dW_acc(Wr, W, in, trg, Ih, Ih, ps);
+            [dWa, y] = get_dW_acc(Wr, W, in, trg, Ih, Ih, ps);
             
          elseif strcmp('project', rule)
-            dWa = get_dW_acc(Wr, W, in, trg, tsk.Th{tnum}, tsk.Sh{tnum}, ps);
+            [dWa, y] = get_dW_acc(Wr, W, in, trg, tsk.Th{tnum}, tsk.Sh{tnum}, ps);
             
          elseif strcmp(rule, 'iofilts')
             dWa = get_dW_acc_io(Wr, W, in, trg, tsk.Th(tnum,:), tsk.Ti(tnum,:), tsk.Sh(tnum,:), tsk.Si(tnum,:), ps);            
@@ -116,6 +116,19 @@ for i = tsk.stim_order'
          
          % Do separately so we can inspect
          dW  = dWa*norm(dW,2)/norm(dWa,2);
+         
+         % Aggregate statistics on how good sampling is
+         if ps.g_stats
+            
+            if strcmp('gd',rule)
+               yg = filts.yg;
+               yg = yg/norm(yg);
+            elseif strcmp('project',rule)
+               yg = filts.y;
+               yg = yg/norm(yg);
+            end
+            hist.corrs(iter,:) = corr(yg,y);
+         end
       end
       
       
