@@ -122,12 +122,15 @@ for i = tsk.stim_order'
             
             if strcmp('gd',rule)
                yg = filts.yg;
-               yg = yg/norm(yg);
+               ym = norm(yg);
+               yg = yg/ym;
             elseif strcmp('project',rule)
                yg = filts.y;
-               yg = yg/norm(yg);
+               ym = norm(yg);
+               yg = yg/ym;
             end
             hist.corrs(iter,:) = corr(yg,y);
+            hist.mags( iter,:)  = ym;
          end
       end
       

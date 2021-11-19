@@ -15,6 +15,7 @@ end
 
 if ps.g_stats && ~ps.g_oracle
    hist.corrs = zeros(tsk.n_trials, 1);
+   hist.mags  = zeros(tsk.n_trials, 1);
 end
 
 % 
